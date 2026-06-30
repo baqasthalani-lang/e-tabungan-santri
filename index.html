@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-Tabungan Pondok Pesantren</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: 'Arial', sans-serif; background-color: #f3f7f4; }
+        .bg-pondok { background-color: #1B4D3E; }
+        .text-pondok { color: #1B4D3E; }
+    </style>
+</head>
+<body>
+
+    <div class="max-w-md mx-auto min-h-screen shadow-lg bg-white relative pb-10">
+        
+        <div class="bg-pondok p-6 text-white text-center rounded-b-2xl shadow-md">
+            <h1 class="text-xl font-bold tracking-wide">E-TABUNGAN DIGITAL</h1>
+            <p class="text-xs text-green-200 mt-1">Sistem Administrasi Tabungan Mandiri Santri</p>
+        </div>
+
+        <div id="section-login" class="p-6 mt-10">
+            <div class="bg-gray-50 border border-gray-200 rounded-xl p-5 shadow-sm">
+                <h2 class="text-sm font-bold text-gray-700 mb-4 text-center">OTENTIKASI PENGURUS PONDOK</h2>
+                <div class="mb-4">
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Passcode Rahasia</label>
+                    <input type="password" id="input-passcode" placeholder="Masukkan 6 angka" class="w-full border rounded-lg px-3 py-2 text-center text-lg font-bold tracking-widest focus:outline-none focus:ring-2 focus:ring-green-700">
+                </div>
+                <button onclick="prosesLogin()" class="w-full bg-pondok text-white font-bold py-2 rounded-lg hover:bg-green-950 transition">MASUK KE SISTEM</button>
+            </div>
+        </div>
+
+        <div id="section-dashboard" class="p-4 hidden">
+            <div id="status-user" class="text-xs font-bold text-right text-gray-500 mb-3">Petugas: Admin Pengurus</div>
+            
+            <div class="grid grid-cols-2 gap-2 mb-6">
+                <button onclick="bukaForm('setor')" class="bg-green-100 border border-green-300 text-green-800 p-3 rounded-xl font-bold text-sm shadow-sm hover:bg-green-200">➕ Setor Uang</button>
+                <button onclick="bukaForm('tarik')" class="bg-red-100 border border-red-300 text-red-800 p-3 rounded-xl font-bold text-sm shadow-sm hover:bg-red-200">➖ Tarik Uang</button>
+            </div>
+
+            <div id="box-formulir" class="bg-gray-50 border border-gray-200 rounded-xl p-4 mb-6 hidden">
+                <h3 id="judul-formulir" class="text-xs font-bold uppercase mb-3 text-pondok">Form Transaksi</h3>
+                <input type="hidden" id="jenis-transaksi">
+                
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">Pilih Santri</label>
+                        <select id="select-santri" class="w-full border rounded-lg p-2 text-sm focus:outline-none focus:ring-1 focus:ring-green-700">
+                            </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">Nominal Uang (Rupiah)</label>
+                        <input type="number" id="input-nominal" placeholder="Contoh: 50000" class="w-full border rounded-lg p-2 text-sm focus:outline-none focus:ring-1 focus:ring-green-700">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">Keterangan Tambahan</label>
+                        <input type="text" id="input-ket" placeholder="Contoh: Kiriman orang tua / Beli kitab" class="w-full border rounded-lg p-2 text-sm focus:outline-none focus:ring-1 focus:ring-green-700">
+                    </div>
+                    <div class="flex space-x-2 pt-2">
+                        <button onclick="simpanTransaksi()" class="flex-1 bg-pondok text-white font-bold py-2 rounded-lg text-sm">Simpan Transaksi</button>
+                        <button onclick="tutupForm()" class="bg-gray-300 text-gray-700 px-3 py-2 rounded-lg text-sm">Batal</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+                <div class="bg-gray-100 px-4 py-2 border-b border-gray-200 flex justify-between items-center">
+                    <span class="text-xs font-bold text-gray-700">MONITOR SALDO AKTIF SANTRI</span>
+                    <button onclick="muatDataSantri()" class="text-xs text-pondok font-bold hover:underline">🔄 Segarkan</button>
+                </div>
+                <div class="divide-y divide-gray-100 max-h-96 overflow-y-auto" id="list-saldo-santri">
+                    <div class="p-4 text-center text-xs text-gray-400">Mengambil data dari Google Sheets...</div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        // Tempel Web App URL Google Apps Script Anda yang didapat dari Tahap 2 di bawah ini:
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwkrefExhvDd4BqpimCqQJEwEcjclURP8LK7PjQ7rL8TuTUuOmhOMI7P7g7mvieznSZPQ/exec";
+        
+        let databaseSantri = [];
+
+        function prosesLogin() {
+            const pin = document.getElementById("input-passcode").value;
+            if(!pin) return alert("Masukkan Passcode!");
+
+            // Kontak Apps Script untuk validasi pin login
+            fetch(`${WEB_APP_URL}?action=login&passcode=${pin}`)
+            .then(res => res.json())
+            .then(res => {
+                if(res.status === "success") {
+                    document.getElementById("section-login").classList.add("hidden");
+                    document.getElementById("section-dashboard").classList.remove("hidden");
+                    muatDataSantri(); // Langsung ambil data saldo setelah berhasil masuk
+                } else {
+                    alert(res.message);
+                }
+            }).catch(err => alert("Koneksi Error/Web App URL Belum Benar!"));
+        }
+
+        function muatDataSantri() {
+            const container = document.getElementById("list-saldo-santri");
+            const selectEl = document.getElementById("select-santri");
+            container.innerHTML = '<div class="p-4 text-center text-xs text-gray-400">Menyinkronkan data...</div>';
+
+            fetch(`${WEB_APP_URL}?action=getSantri`)
+            .then(res => res.json())
+            .then(res => {
+                if(res.status === "success") {
+                    databaseSantri = res.data;
+                    
+                    // Render ke list tampilan saldo
+                    container.innerHTML = "";
+                    selectEl.innerHTML = "";
+                    
+                    databaseSantri.forEach(santri => {
+                        // Tambahkan ke list visual saldo
+                        let row = document.createElement("div");
+                        row.className = "p-3 flex justify-between items-center text-sm hover:bg-gray-50";
+                        row.innerHTML = `
+                            <div>
+                                <div class="font-bold text-gray-800">${santri.nama}</div>
+                                <div class="text-xs text-gray-400">${santri.id} | ${santri.kelas}</div>
+                            </div>
+                            <div class="font-bold text-green-700 bg-green-50 px-2 py-1 rounded text-right">
+                                Rp ${Number(santri.saldo).toLocaleString('id-ID')}
+                            </div>
+                        `;
+                        container.appendChild(row);
+
+                        // Tambahkan ke pilihan dropdown formulir
+                        let opt = document.createElement("option");
+                        opt.value = santri.id;
+                        opt.innerText = `${santri.nama} (${santri.id})`;
+                        selectEl.appendChild(opt);
+                    });
+                }
+            });
+        }
+
+        function bukaForm(jenis) {
+            document.getElementById("box-formulir").classList.remove("hidden");
+            document.getElementById("jenis-transaksi").value = jenis;
+            document.getElementById("judul-formulir").innerText = jenis === "setor" ? "Formulir Setor Tabungan" : "Formulir Penarikan Tabungan";
+        }
+
+        function tutupForm() {
+            document.getElementById("box-formulir").classList.add("hidden");
+            document.getElementById("input-nominal").value = "";
+            document.getElementById("input-ket").value = "";
+        }
+
+        function simpanTransaksi() {
+            const jenis = document.getElementById("jenis-transaksi").value;
+            const idSantri = document.getElementById("select-santri").value;
+            const jumlah = document.getElementById("input-nominal").value;
+            const keterangan = document.getElementById("input-ket").value || "-";
+
+            if(!jumlah || jumlah <= 0) return alert("Nominal transaksi harus valid!");
+
+            const dataKirim = {
+                action: jenis,
+                idSantri: idSantri,
+                jumlah: Number(jumlah),
+                petugas: "Admin Pengurus",
+                keterangan: keterangan
+            };
+
+            if(!confirm(`Apakah Anda yakin mencatat transaksi ini?`)) return;
+
+            // Kirim data ke pusat menggunakan POST method
+            fetch(WEB_APP_URL, {
+                method: "POST",
+                body: JSON.stringify(dataKirim)
+            })
+            .then(res => res.json())
+            .then(res => {
+                if(res.status === "success") {
+                    alert(res.message + " ID: " + res.txId);
+                    tutupForm();
+                    muatDataSantri(); // Refresh data saldo otomatis
+                } else {
+                    alert(res.message);
+                }
+            }).catch(err => alert("Ggal mengirim transaksi!"));
+        }
+    </script>
+</body>
+</html>
