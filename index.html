@@ -4,11 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>E-Tabungan Pondok Pesantren</title>
-  <!-- Bootstrap 5 CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <!-- Bootstrap Icons -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
-  <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   
   <style>
@@ -37,7 +34,6 @@
       background-color: #146c43;
       color: white;
     }
-    /* Style untuk daftar santri hasil pencarian */
     .daftar-santri-kontainer {
       max-height: 250px;
       overflow-y: auto;
@@ -67,27 +63,46 @@
       color: #6c757d;
       border: 1px solid #dee2e6;
     }
+    /* Style untuk wadah scroll riwayat lengkap */
+    .riwayat-scroll-kontainer {
+      max-height: 350px; /* Batas tinggi kotak riwayat, jika penuh akan muncul scroll */
+      overflow-y: auto;
+      border: 1px solid #dee2e6;
+      border-radius: 8px;
+      background-color: #fafafa;
+    }
+    .tabel-riwayat th {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      position: sticky;
+      top: 0;
+      background-color: #f8f9fa;
+      z-index: 1;
+      border-bottom: 2px solid #dee2e6;
+    }
+    .tabel-riwayat td {
+      font-size: 0.85rem;
+      vertical-align: middle;
+    }
   </style>
 </head>
 <body>
 
-  <!-- NAVBAR HEADER -->
   <nav class="navbar navbar-expand-lg navbar-pesantren py-3">
     <div class="container">
       <span class="navbar-brand fw-bold text-white"><i class="bi bi-wallet2 me-2"></i> E-Tabungan Pesantren</span>
-      <span class="badge bg-light text-success fw-bold">Versi 2.0 (Stabil)</span>
+      <span class="badge bg-light text-success fw-bold">Versi 2.2 (Riwayat Lengkap)</span>
     </div>
   </nav>
 
   <div class="container my-4">
     <div class="row g-4">
       
-      <!-- SISI KIRI: PANEL PENCARIAN & PEMILIHAN SANTRI -->
       <div class="col-lg-5">
-        <div class="card card-custom p-4 h-100">
+        <div class="card card-custom p-4 mb-4">
           <h5 class="fw-bold mb-3 text-success"><i class="bi bi-person-check-fill me-2"></i> Pilih Santri</h5>
           
-          <!-- Kotak Filter -->
           <div class="mb-3">
             <label class="form-label small fw-bold text-secondary">Cari Nama / ID</label>
             <div class="input-group">
@@ -111,21 +126,18 @@
             </div>
           </div>
 
-          <!-- Wadah Hasil Pencarian -->
           <label class="form-label small fw-bold text-secondary">Hasil Pencarian (<span id="jumlahDitemukan">0</span> santri)</label>
           <div id="daftarSantriLister" class="daftar-santri-kontainer mb-2">
             <div class="p-3 text-center text-muted">Memuat data dari Google Sheets...</div>
           </div>
-          <small class="text-muted"><i class="bi bi-info-circle"></i> Klik pada salah satu nama di atas untuk bertransaksi.</small>
+          <small class="text-muted"><i class="bi bi-info-circle"></i> Klik nama santri untuk memuat profil & riwayat transaksi.</small>
         </div>
       </div>
 
-      <!-- SISI KANAN: FORMULIR TRANSAKSI & RINGKASAN SALDO -->
       <div class="col-lg-7">
         <div class="card card-custom p-4 mb-4">
           <h5 class="fw-bold mb-3 text-dark"><i class="bi bi-calculator me-2"></i> Input Transaksi</h5>
           
-          <!-- Tampilan Ringkas Santri Terpilih -->
           <div class="p-3 mb-4 rounded-3 d-none" id="boxSantriTerpilih" style="background-color: #e8f5e9; border: 1px solid #c1e7c4;">
             <div class="row align-items-center">
               <div class="col-sm-7">
@@ -139,9 +151,7 @@
             </div>
           </div>
 
-          <!-- Form Aksi Tabungan -->
           <form id="formTabungan" onsubmit="simpanTransaksi(event)">
-            <!-- Menyimpan ID tersembunyi -->
             <input type="hidden" id="selectedSantriId" required>
 
             <div class="mb-3">
@@ -162,35 +172,41 @@
 
             <div class="mb-3">
               <label class="form-label fw-bold">Keterangan / Catatan</label>
-              <input type="text" id="keterangan" class="form-control" placeholder="Contoh: Titipan bulanan orang tua atau Jajen harian">
+              <input type="text" id="keterangan" class="form-control" placeholder="Contoh: Jajen harian, kiriman bulanan, dll.">
             </div>
 
             <div class="mb-3">
               <label class="form-label fw-bold">PIN Pengurus</label>
-              <input type="password" id="passcode" class="form-control" placeholder="Masukkan PIN Rahasia Anda" required>
+              <input type="password" id="passcode" class="form-control" placeholder="Masukkan PIN Rahasia" required>
             </div>
 
             <button type="submit" id="btnSubmit" class="btn btn-sukses btn-lg w-100 fw-bold py-2" disabled>
               <i class="bi bi-check-circle-fill me-1"></i> Proses Transaksi Sekarang
             </button>
           </form>
+
+          <div id="sectionRiwayat" class="mt-4 d-none">
+            <hr class="text-muted my-4">
+            <h6 class="fw-bold text-secondary mb-3"><i class="bi bi-clock-history me-2"></i> Semua Riwayat Buku Tabungan (Urut Terbaru)</h6>
+            <div id="riwayatTransaksiKontainer" class="riwayat-scroll-kontainer">
+              <div class="text-center text-muted py-2 small">Pilih santri untuk memuat riwayat.</div>
+            </div>
+          </div>
+
         </div>
       </div>
 
     </div>
   </div>
 
-  <!-- Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-  <!-- LOGIKA APLIKASI UTAMANYA -->
   <script>
-    // ⚠️ PENTING: Masukkan kembali URL Web App Google Apps Script Anda di bawah ini!
+    // ⚠️ MASUKKAN URL WEB APP GOOGLE APPS SCRIPT ANDA DI SINI!
     const API_URL = "https://script.google.com/macros/s/AKfycbwkrefExhvDd4BqpimCqQJEwEcjclURP8LK7PjQ7rL8TuTUuOmhOMI7P7g7mvieznSZPQ/exec"; 
 
     let semuaDataSantri = [];
 
-    // 1. AMBIL DATA SAAT HALAMAN DIBUKA
     window.onload = function() {
       muatDataDariSheets();
     };
@@ -208,36 +224,26 @@
         })
         .catch(err => {
           console.error(err);
-          lister.innerHTML = `<div class="p-3 text-center text-danger"><i class="bi bi-exclamation-triangle-fill"></i> Gagal memuat data. Hubungkan internet Anda atau cek URL Apps Script.</div>`;
+          lister.innerHTML = `<div class="p-3 text-center text-danger"><i class="bi bi-exclamation-triangle-fill"></i> Gagal memuat data.</div>`;
         });
     }
 
-    // 2. EKSTRAK KELAS & ANGKATAN SECARA OTOMATIS
     function populasiFilterDropdowns() {
       const kelasSet = new Set();
       const angkatanSet = new Set();
-
       semuaDataSantri.forEach(s => {
         if(s.kelas) kelasSet.add(s.kelas);
         if(s.angkatan) angkatanSet.add(s.angkatan);
       });
-
-      // Isi Dropdown Kelas
       const selKelas = document.getElementById("filterKelas");
       selKelas.innerHTML = '<option value="">-- Semua --</option>';
-      Array.from(kelasSet).sort().forEach(k => {
-        selKelas.innerHTML += `<option value="${k}">${k}</option>`;
-      });
+      Array.from(kelasSet).sort().forEach(k => { selKelas.innerHTML += `<option value="${k}">${k}</option>`; });
 
-      // Isi Dropdown Angkatan
       const selAngkatan = document.getElementById("filterAngkatan");
       selAngkatan.innerHTML = '<option value="">-- Semua --</option>';
-      Array.from(angkatanSet).sort().forEach(a => {
-        selAngkatan.innerHTML += `<option value="${a}">${a}</option>`;
-      });
+      Array.from(angkatanSet).sort().forEach(a => { selAngkatan.innerHTML += `<option value="${a}">${a}</option>`; });
     }
 
-    // 3. LOGIKA FILTER REAL-TIME (PENCARIAN PINTAR)
     function jalankanFilterSantri() {
       const kataKunci = document.getElementById("cariSantri").value.toLowerCase();
       const kelasDipilih = document.getElementById("filterKelas").value;
@@ -254,19 +260,16 @@
       tampilkanDaftarKeLister(hasilFilter);
     }
 
-    // Pasang pendengar tombol ketik & klik
     document.getElementById("cariSantri").addEventListener("input", jalankanFilterSantri);
     document.getElementById("filterKelas").addEventListener("change", jalankanFilterSantri);
     document.getElementById("filterAngkatan").addEventListener("change", jalankanFilterSantri);
 
-    // 4. TAMPILKAN DAFTAR KE UI LISTER
     function tampilkanDaftarKeLister(daftar) {
       const lister = document.getElementById("daftarSantriLister");
       if(daftar.length === 0) {
         lister.innerHTML = `<div class="p-4 text-center text-muted">Santri tidak ditemukan.</div>`;
         return;
       }
-
       lister.innerHTML = "";
       daftar.forEach(santri => {
         const item = document.createElement("div");
@@ -282,22 +285,16 @@
             <span class="badge badge-info-santri mb-1 d-inline-block">Akt: ${santri.angkatan || '-'}</span>
           </div>
         `;
-        
-        // Klik santri untuk memproses transaksi
-        item.onclick = function() {
-          pilihSantriUntukTransaksi(santri);
-        };
+        item.onclick = function() { pilihSantriUntukTransaksi(santri); };
         lister.appendChild(item);
       });
     }
 
-    // 5. PILIH SANTRI & AKTIFKAN FORMULIR
     function pilihSantriUntukTransaksi(santri) {
       document.querySelectorAll('.item-santri').forEach(el => el.classList.remove('terpilih'));
       const elemenTerpilih = document.getElementById(`item-${santri.id}`);
       if(elemenTerpilih) elemenTerpilih.classList.add('terpilih');
 
-      // Tampilkan Box Info Santri Terpilih
       document.getElementById("boxSantriTerpilih").classList.remove("d-none");
       document.getElementById("lblNamaSantri").innerText = santri.nama;
       document.getElementById("lblIdSantri").innerText = santri.id;
@@ -309,9 +306,63 @@
 
       document.getElementById("selectedSantriId").value = santri.id;
       document.getElementById("btnSubmit").disabled = false;
+
+      muatRiwayatTransaksi(santri.id);
     }
 
-    // 6. KIRIM DATA TRANSAKSI KE GOOGLE SHEETS
+    function muatRiwayatTransaksi(idSantri) {
+      const wadah = document.getElementById("riwayatTransaksiKontainer");
+      document.getElementById("sectionRiwayat").classList.remove("d-none");
+      
+      wadah.innerHTML = `<div class="text-center my-3 text-muted small"><div class="spinner-border spinner-border-sm me-2 text-success"></div>Membaca seluruh riwayat buku tabungan...</div>`;
+      
+      fetch(`${API_URL}?aksi=getRiwayat&idSantri=${idSantri}`)
+        .then(res => res.json())
+        .then(riwayat => {
+          if (riwayat.length === 0) {
+            wadah.innerHTML = `<div class="text-center text-muted py-4 small"><i class="bi bi-info-circle me-1"></i> Belum ada riwayat transaksi sama sekali.</div>`;
+            return;
+          }
+          
+          let tabelHtml = `
+            <div class="table-responsive">
+              <table class="table table-sm table-hover tabel-riwayat align-middle mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th>Waktu</th>
+                    <th>Aksi</th>
+                    <th>Nominal</th>
+                    <th>Keterangan</th>
+                  </tr>
+                </thead>
+                <tbody>
+          `;
+          
+          riwayat.forEach(t => {
+            const badge = t.jenis === "SETORAN" ? '<span class="badge bg-success-subtle text-success p-1 px-2"><i class="bi bi-arrow-down-left"></i> Setor</span>' : '<span class="badge bg-danger-subtle text-danger p-1 px-2"><i class="bi bi-arrow-up-right"></i> Tarik</span>';
+            const warnaUang = t.jenis === "SETORAN" ? 'text-success' : 'text-danger';
+            const simbolUang = t.jenis === "SETORAN" ? '+' : '-';
+            const rp = new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(t.nominal);
+            
+            tabelHtml += `
+              <tr>
+                <td class="text-nowrap text-secondary">${t.tanggal}</td>
+                <td>${badge}</td>
+                <td class="fw-bold ${warnaUang}">${simbolUang} ${rp}</td>
+                <td class="text-muted text-break">${t.keterangan || "-"}</td>
+              </tr>
+            `;
+          });
+          
+          tabelHtml += `</tbody></table></div>`;
+          wadah.innerHTML = tabelHtml;
+        })
+        .catch(err => {
+          console.error(err);
+          wadah.innerHTML = `<div class="text-center text-danger py-2 small">Gagal mengambil riwayat transaksi.</div>`;
+        });
+    }
+
     function simpanTransaksi(e) {
       e.preventDefault();
       
@@ -343,17 +394,15 @@
         if(hasil.status === "sukses") {
           alert(`Alhamdulillah, Transaksi ${jenis} senilai Rp ${parseInt(nominal).toLocaleString('id-ID')} Berhasil Dicatat!`);
           
-          // Reset form secara instan
           document.getElementById("nominal").value = "";
           document.getElementById("keterangan").value = "";
           document.getElementById("passcode").value = "";
           
-          // FIX UTAMA: Mengembalikan tombol ke keadaan normal setelah sukses
           btn.disabled = false;
           btn.innerHTML = `<i class="bi bi-check-circle-fill me-1"></i> Proses Transaksi Sekarang`;
           
-          // Segarkan data otomatis agar saldo langsung berubah akurat
           muatDataDariSheets();
+          muatRiwayatTransaksi(idSantri);
         } else {
           alert("Gagal: " + hasil.pesan);
           btn.disabled = false;
