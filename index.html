@@ -4,8 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>E-Tabungan Pondok Pesantren</title>
+  <!-- Bootstrap 5 CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap Icons -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   
   <style>
@@ -68,6 +71,7 @@
 </head>
 <body>
 
+  <!-- NAVBAR HEADER -->
   <nav class="navbar navbar-expand-lg navbar-pesantren py-3">
     <div class="container">
       <span class="navbar-brand fw-bold text-white"><i class="bi bi-wallet2 me-2"></i> E-Tabungan Pesantren</span>
@@ -78,10 +82,12 @@
   <div class="container my-4">
     <div class="row g-4">
       
+      <!-- SISI KIRI: PANEL PENCARIAN & PEMILIHAN SANTRI -->
       <div class="col-lg-5">
         <div class="card card-custom p-4 h-100">
           <h5 class="fw-bold mb-3 text-success"><i class="bi bi-person-check-fill me-2"></i> Pilih Santri</h5>
           
+          <!-- Kotak Filter -->
           <div class="mb-3">
             <label class="form-label small fw-bold text-secondary">Cari Nama / ID</label>
             <div class="input-group">
@@ -105,6 +111,7 @@
             </div>
           </div>
 
+          <!-- Wadah Hasil Pencarian -->
           <label class="form-label small fw-bold text-secondary">Hasil Pencarian (<span id="jumlahDitemukan">0</span> santri)</label>
           <div id="daftarSantriLister" class="daftar-santri-kontainer mb-2">
             <div class="p-3 text-center text-muted">Memuat data dari Google Sheets...</div>
@@ -113,10 +120,12 @@
         </div>
       </div>
 
+      <!-- SISI KANAN: FORMULIR TRANSAKSI & RINGKASAN SALDO -->
       <div class="col-lg-7">
         <div class="card card-custom p-4 mb-4">
           <h5 class="fw-bold mb-3 text-dark"><i class="bi bi-calculator me-2"></i> Input Transaksi</h5>
           
+          <!-- Tampilan Ringkas Santri Terpilih -->
           <div class="p-3 mb-4 rounded-3 d-none" id="boxSantriTerpilih" style="background-color: #e8f5e9; border: 1px solid #c1e7c4;">
             <div class="row align-items-center">
               <div class="col-sm-7">
@@ -130,7 +139,9 @@
             </div>
           </div>
 
+          <!-- Form Aksi Tabungan -->
           <form id="formTabungan" onsubmit="simpanTransaksi(event)">
+            <!-- Menyimpan ID tersembunyi -->
             <input type="hidden" id="selectedSantriId" required>
 
             <div class="mb-3">
@@ -169,8 +180,10 @@
     </div>
   </div>
 
+  <!-- Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
+  <!-- LOGIKA APLIKASI UTAMANYA -->
   <script>
     // ⚠️ PENTING: Masukkan kembali URL Web App Google Apps Script Anda di bawah ini!
     const API_URL = "https://script.google.com/macros/s/AKfycbwkrefExhvDd4BqpimCqQJEwEcjclURP8LK7PjQ7rL8TuTUuOmhOMI7P7g7mvieznSZPQ/exec"; 
@@ -298,16 +311,13 @@
       document.getElementById("btnSubmit").disabled = false;
     }
 
-    // 6. KIRIM DATA TRANSAKSI KE GOOGLE SHEETS (SUDAH DIPERBAIKI TYPO-NYA)
+    // 6. KIRIM DATA TRANSAKSI KE GOOGLE SHEETS
     function simpanTransaksi(e) {
       e.preventDefault();
       
       const btn = document.getElementById("btnSubmit");
       const idSantri = document.getElementById("selectedSantriId").value;
-      
-      // PERBAIKAN UTAMA: Mengganti kata 'name' menjadi 'input' agar pilihan terbaca sempurna
       const jenis = document.querySelector('input[name="jenisTransaksi"]:checked').value;
-      
       const nominal = document.getElementById("nominal").value;
       const keterangan = document.getElementById("keterangan").value;
       const passcode = document.getElementById("passcode").value;
@@ -337,6 +347,10 @@
           document.getElementById("nominal").value = "";
           document.getElementById("keterangan").value = "";
           document.getElementById("passcode").value = "";
+          
+          // FIX UTAMA: Mengembalikan tombol ke keadaan normal setelah sukses
+          btn.disabled = false;
+          btn.innerHTML = `<i class="bi bi-check-circle-fill me-1"></i> Proses Transaksi Sekarang`;
           
           // Segarkan data otomatis agar saldo langsung berubah akurat
           muatDataDariSheets();
